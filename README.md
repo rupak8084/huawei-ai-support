@@ -133,7 +133,23 @@ Web search automatically triggers for queries containing:
 
 ## 🔧 Environment Variables
 
-No environment variables are required for basic functionality. The app uses the built-in AI SDK.
+This app requires an OpenAI API key to function. Add this in your Vercel dashboard:
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `OPENAI_API_KEY` | Your OpenAI API key | ✅ Yes |
+
+### How to Get an OpenAI API Key:
+1. Go to [platform.openai.com](https://platform.openai.com)
+2. Sign up or log in
+3. Navigate to API Keys section
+4. Create a new API key
+5. Copy the key and add it to Vercel Environment Variables
+
+### Adding to Vercel:
+1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+2. Add `OPENAI_API_KEY` with your API key as the value
+3. Redeploy the project
 
 ## 🛠️ Tech Stack
 
@@ -142,7 +158,7 @@ No environment variables are required for basic functionality. The app uses the 
 - **Styling**: Tailwind CSS 4
 - **UI Components**: Shadcn/ui
 - **Icons**: Lucide React
-- **AI SDK**: z-ai-web-dev-sdk
+- **AI**: OpenAI GPT-4o-mini
 - **Package Manager**: Bun
 
 ## 📱 Screenshots
