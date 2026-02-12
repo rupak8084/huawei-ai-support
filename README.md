@@ -1,141 +1,179 @@
-# 🚀 Welcome to Z.ai Code Scaffold
+# Huawei AI Customer Support
 
-A modern, production-ready web application scaffold powered by cutting-edge technologies, designed to accelerate your development with [Z.ai](https://chat.z.ai)'s AI-powered coding assistance.
+An AI-powered customer service chatbot for Huawei mobile brand, built with Next.js 15, featuring real-time web search capabilities and a beautiful branded interface.
 
-## ✨ Technology Stack
+![Huawei Support](https://img.shields.io/badge/Huawei-AI%20Support-red?style=for-the-badge&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript)
 
-This scaffold provides a robust foundation built with:
+## ✨ Features
 
-### 🎯 Core Framework
-- **⚡ Next.js 16** - The React framework for production with App Router
-- **📘 TypeScript 5** - Type-safe JavaScript for better developer experience
-- **🎨 Tailwind CSS 4** - Utility-first CSS framework for rapid UI development
-
-### 🧩 UI Components & Styling
-- **🧩 shadcn/ui** - High-quality, accessible components built on Radix UI
-- **🎯 Lucide React** - Beautiful & consistent icon library
-- **🌈 Framer Motion** - Production-ready motion library for React
-- **🎨 Next Themes** - Perfect dark mode in 2 lines of code
-
-### 📋 Forms & Validation
-- **🎣 React Hook Form** - Performant forms with easy validation
-- **✅ Zod** - TypeScript-first schema validation
-
-### 🔄 State Management & Data Fetching
-- **🐻 Zustand** - Simple, scalable state management
-- **🔄 TanStack Query** - Powerful data synchronization for React
-- **🌐 Fetch** - Promise-based HTTP request
-
-### 🗄️ Database & Backend
-- **🗄️ Prisma** - Next-generation TypeScript ORM
-- **🔐 NextAuth.js** - Complete open-source authentication solution
-
-### 🎨 Advanced UI Features
-- **📊 TanStack Table** - Headless UI for building tables and datagrids
-- **🖱️ DND Kit** - Modern drag and drop toolkit for React
-- **📊 Recharts** - Redefined chart library built with React and D3
-- **🖼️ Sharp** - High performance image processing
-
-### 🌍 Internationalization & Utilities
-- **🌍 Next Intl** - Internationalization library for Next.js
-- **📅 Date-fns** - Modern JavaScript date utility library
-- **🪝 ReactUse** - Collection of essential React hooks for modern development
-
-## 🎯 Why This Scaffold?
-
-- **🏎️ Fast Development** - Pre-configured tooling and best practices
-- **🎨 Beautiful UI** - Complete shadcn/ui component library with advanced interactions
-- **🔒 Type Safety** - Full TypeScript configuration with Zod validation
-- **📱 Responsive** - Mobile-first design principles with smooth animations
-- **🗄️ Database Ready** - Prisma ORM configured for rapid backend development
-- **🔐 Auth Included** - NextAuth.js for secure authentication flows
-- **📊 Data Visualization** - Charts, tables, and drag-and-drop functionality
-- **🌍 i18n Ready** - Multi-language support with Next Intl
-- **🚀 Production Ready** - Optimized build and deployment settings
-- **🤖 AI-Friendly** - Structured codebase perfect for AI assistance
+- 🤖 **AI-Powered Chat** - Intelligent customer support powered by advanced AI
+- 🌐 **Real-time Web Search** - Fetches current information for pricing, deals, and product updates
+- 🎨 **Huawei Branding** - Custom red theme matching Huawei's brand identity
+- ⚡ **Quick Actions** - Instant responses for common queries
+- 📱 **Responsive Design** - Works perfectly on desktop, tablet, and mobile
+- 🔄 **Smart Caching** - Efficient message handling for smooth performance
+- 🛡️ **Error Handling** - Graceful error recovery and user-friendly messages
 
 ## 🚀 Quick Start
 
+### Prerequisites
+
+- Node.js 18+ or Bun
+- npm, yarn, or bun
+
+### Installation
+
 ```bash
+# Clone the repository
+git clone https://github.com/your-username/huawei-ai-support.git
+
+# Navigate to project directory
+cd huawei-ai-support
+
 # Install dependencies
 bun install
+# or
+npm install
 
 # Start development server
 bun run dev
+# or
+npm run dev
+```
 
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 🏗️ Production Build
+
+```bash
 # Build for production
 bun run build
 
 # Start production server
-bun start
+bun run start
 ```
-
-Open [http://localhost:3000](http://localhost:3000) to see your application running.
-
-## 🤖 Powered by Z.ai
-
-This scaffold is optimized for use with [Z.ai](https://chat.z.ai) - your AI assistant for:
-
-- **💻 Code Generation** - Generate components, pages, and features instantly
-- **🎨 UI Development** - Create beautiful interfaces with AI assistance  
-- **🔧 Bug Fixing** - Identify and resolve issues with intelligent suggestions
-- **📝 Documentation** - Auto-generate comprehensive documentation
-- **🚀 Optimization** - Performance improvements and best practices
-
-Ready to build something amazing? Start chatting with Z.ai at [chat.z.ai](https://chat.z.ai) and experience the future of AI-powered development!
 
 ## 📁 Project Structure
 
 ```
-src/
-├── app/                 # Next.js App Router pages
-├── components/          # Reusable React components
-│   └── ui/             # shadcn/ui components
-├── hooks/              # Custom React hooks
-└── lib/                # Utility functions and configurations
+huawei-ai-support/
+├── src/
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── agent/
+│   │   │       └── route.ts      # AI agent API endpoint
+│   │   ├── globals.css           # Global styles with Huawei theme
+│   │   ├── layout.tsx            # Root layout
+│   │   └── page.tsx              # Main chat page
+│   ├── components/
+│   │   ├── chat/
+│   │   │   ├── ChatInput.tsx     # Message input component
+│   │   │   ├── ChatMessage.tsx   # Message display component
+│   │   │   ├── Header.tsx        # App header
+│   │   │   ├── QuickActions.tsx  # Quick action buttons
+│   │   │   ├── Sidebar.tsx       # Conversation sidebar
+│   │   │   └── TypingIndicator.tsx
+│   │   ├── ui/                   # Shadcn UI components
+│   │   └── ErrorBoundary.tsx     # Error handling
+│   └── hooks/                    # Custom React hooks
+├── public/                       # Static assets
+├── next.config.ts               # Next.js configuration
+├── package.json                 # Dependencies
+└── README.md                    # This file
 ```
 
-## 🎨 Available Features & Components
+## 🎯 Quick Actions
 
-This scaffold includes a comprehensive set of modern web development tools:
+The app includes 8 quick action buttons for instant responses:
 
-### 🧩 UI Components (shadcn/ui)
-- **Layout**: Card, Separator, Aspect Ratio, Resizable Panels
-- **Forms**: Input, Textarea, Select, Checkbox, Radio Group, Switch
-- **Feedback**: Alert, Toast (Sonner), Progress, Skeleton
-- **Navigation**: Breadcrumb, Menubar, Navigation Menu, Pagination
-- **Overlay**: Dialog, Sheet, Popover, Tooltip, Hover Card
-- **Data Display**: Badge, Avatar, Calendar
+| Action | Description |
+|--------|-------------|
+| 📱 Products | Huawei smartphones and devices info |
+| 🔧 Tech Support | Device troubleshooting help |
+| 📦 Track Order | Order tracking assistance |
+| 🔄 Returns | Return policy information |
+| 🛡️ Warranty | Huawei Care & warranty info |
+| 💳 Payment | Payment methods |
+| ❓ FAQ | Frequently asked questions |
+| 💬 Human Support | Contact Huawei support |
 
-### 📊 Advanced Data Features
-- **Tables**: Powerful data tables with sorting, filtering, pagination (TanStack Table)
-- **Charts**: Beautiful visualizations with Recharts
-- **Forms**: Type-safe forms with React Hook Form + Zod validation
+## 🌐 Web Search
 
-### 🎨 Interactive Features
-- **Animations**: Smooth micro-interactions with Framer Motion
-- **Drag & Drop**: Modern drag-and-drop functionality with DND Kit
-- **Theme Switching**: Built-in dark/light mode support
+Web search automatically triggers for queries containing:
+- Time-sensitive: `latest`, `current`, `recent`, `today`
+- Pricing: `price`, `cost`, `deal`, `offer`, `discount`
+- Comparison: `compare`, `review`, `best`, `top`
+- Years: `2024`, `2025`, `2026`
+- Products: `mate 70`, `pura 70`, `matebook`, `freebuds`
 
-### 🔐 Backend Integration
-- **Authentication**: Ready-to-use auth flows with NextAuth.js
-- **Database**: Type-safe database operations with Prisma
-- **API Client**: HTTP requests with Fetch + TanStack Query
-- **State Management**: Simple and scalable with Zustand
+## 🚀 Deployment
 
-### 🌍 Production Features
-- **Internationalization**: Multi-language support with Next Intl
-- **Image Optimization**: Automatic image processing with Sharp
-- **Type Safety**: End-to-end TypeScript with Zod validation
-- **Essential Hooks**: 100+ useful React hooks with ReactUse for common patterns
+### Deploy to Vercel (Recommended)
 
-## 🤝 Get Started with Z.ai
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/huawei-ai-support)
 
-1. **Clone this scaffold** to jumpstart your project
-2. **Visit [chat.z.ai](https://chat.z.ai)** to access your AI coding assistant
-3. **Start building** with intelligent code generation and assistance
-4. **Deploy with confidence** using the production-ready setup
+1. Click the button above
+2. Connect your GitHub account
+3. Click "Deploy"
+4. Done! ✅
+
+### Deploy to Railway
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/your-username/huawei-ai-support)
+
+### Deploy to Render
+
+1. Create a new Web Service on [Render](https://render.com)
+2. Connect your GitHub repository
+3. Build Command: `bun run build`
+4. Start Command: `bun run start`
+5. Deploy!
+
+## 🔧 Environment Variables
+
+No environment variables are required for basic functionality. The app uses the built-in AI SDK.
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS 4
+- **UI Components**: Shadcn/ui
+- **Icons**: Lucide React
+- **AI SDK**: z-ai-web-dev-sdk
+- **Package Manager**: Bun
+
+## 📱 Screenshots
+
+### Desktop View
+- Clean chat interface with Huawei branding
+- Sidebar for conversation history
+- Quick actions for common queries
+
+### Mobile View
+- Responsive design
+- Collapsible sidebar
+- Touch-friendly interface
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org/) - The React Framework
+- [Shadcn/ui](https://ui.shadcn.com/) - Beautiful UI components
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS
+- [Lucide](https://lucide.dev/) - Beautiful icons
 
 ---
 
-Built with ❤️ for the developer community. Supercharged by [Z.ai](https://chat.z.ai) 🚀
+**Built with ❤️ for Huawei Customer Support Demo**
+
+![Footer](https://img.shields.io/badge/Made%20with-Next.js-black?style=flat-square)
