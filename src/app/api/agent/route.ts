@@ -1,7 +1,5 @@
 import { NextRequest } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
+import OpenAI from 'openai';
 
 interface SearchResult {
   url: string;
@@ -18,50 +16,19 @@ interface ChatMessage {
   content: string;
 }
 
-// Initialize ZAI SDK with environment variables
-async function initZAI() {
-  // Create config from environment variables
-  const baseUrl = process.env.Z_AI_BASE_URL || process.env.NEXT_PUBLIC_Z_AI_BASE_URL;
-  const apiKey = process.env.Z_AI_API_KEY || process.env.NEXT_PUBLIC_Z_AI_API_KEY;
-  
-  if (!baseUrl || !apiKey) {
-    throw new Error(`Missing Z.AI configuration. Set Z_AI_BASE_URL and Z_AI_API_KEY environment variables in Vercel.`);
+// Initialize OpenAI client
+function getOpenAI() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY environment variable is not set. Please add it in Vercel Dashboard > Settings > Environment Variables');
   }
   
-  // Write config file for SDK
-  const configDir = path.join(process.cwd(), '.z-ai-config');
-  const homeConfig = path.join(os.homedir(), '.z-ai-config');
-  
-  const configContent = JSON.stringify({
-    baseUrl,
-    apiKey,
-    chatId: process.env.Z_AI_CHAT_ID || '',
-    userId: process.env.Z_AI_USER_ID || ''
+  return new OpenAI({
+    apiKey: apiKey,
   });
-  
-  // Try to write to home directory (works in Vercel)
-  try {
-    fs.mkdirSync(path.dirname(homeConfig), { recursive: true });
-    fs.writeFileSync(homeConfig, configContent);
-    console.log('[Agent API] Config written to home directory');
-  } catch (e) {
-    console.log('[Agent API] Could not write to home directory, trying cwd');
-  }
-  
-  // Also try current directory
-  try {
-    fs.writeFileSync(configDir, configContent);
-    console.log('[Agent API] Config written to current directory');
-  } catch (e) {
-    console.log('[Agent API] Could not write to current directory');
-  }
-  
-  // Import and create SDK instance
-  const ZAI = (await import('z-ai-web-dev-sdk')).default;
-  return await ZAI.create();
 }
 
-const SYSTEM_PROMPT = `You are a friendly and helpful AI customer service agent for **Huawei**, the leading global technology company.
+const SYSTEM_PROMPT = `You are a friendly and helpful AI customer service agent for **Huawei**, the leading global technology company. You represent Huawei's commitment to innovation and customer satisfaction.
 
 **About Huawei:**
 - Huawei is a global leader in smartphones, tablets, wearables, laptops, and telecommunications equipment
@@ -71,137 +38,169 @@ const SYSTEM_PROMPT = `You are a friendly and helpful AI customer service agent 
 
 **Your Capabilities:**
 1. **Product Information**: Help customers with Huawei smartphones, tablets, laptops, wearables, and accessories
-2. **Order Support**: Assist with tracking orders, delivery issues, and order modifications
-3. **Technical Support**: Help with HarmonyOS, EMUI, device setup, troubleshooting
-4. **Returns & Refunds**: Guide customers through Huawei's return policies
-5. **Warranty & Service**: Information about Huawei Care and warranty claims
+2. **Order Support**: Assist with tracking orders, delivery issues, and order modifications from Huawei Store
+3. **Technical Support**: Help with HarmonyOS, EMUI, device setup, troubleshooting, and software updates
+4. **Returns & Refunds**: Guide customers through Huawei's return policies and refund processes
+5. **Warranty & Service**: Information about Huawei Care, warranty claims, and service center locations
 
 **Product Knowledge:**
-- Smartphones: Mate 70 series, Pura 70 series, nova series, Mate X foldable
-- Wearables: Huawei Watch GT series, Watch Ultimate, FreeBuds series
-- Laptops: MateBook X Pro, MateBook 14, MateBook D series
-- Tablets: MatePad Pro, MatePad Air, MatePad series
-- Software: HarmonyOS 4.0/5.0, EMUI
+- **Smartphones**: Mate 70 series, Pura 70 series, nova series, Mate X foldable series
+- **Wearables**: Huawei Watch GT series, Watch Ultimate, Watch D, FreeBuds series
+- **Laptops**: MateBook X Pro, MateBook 14, MateBook D series
+- **Tablets**: MatePad Pro, MatePad Air, MatePad series
+- **Software**: HarmonyOS 4.0/5.0, EMUI, Huawei Mobile Services (HMS)
 
-Guidelines: Be polite, professional, helpful. Guide customers to consumer.huawei.com/support when needed.`;
+**Guidelines:**
+- Always be polite, professional, and embody Huawei's brand values
+- Provide clear and helpful responses about Huawei products and services
+- If you don't know something, be honest and offer to help find information
+- Guide customers to Huawei Support at consumer.huawei.com/support when needed
+- Keep responses concise but thorough
+- Today's date is ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
 
-const SEARCH_KEYWORDS = [
+Remember: You represent Huawei's commitment to "Building a fully connected, intelligent world" and customer satisfaction is your top priority!`;
+
+// Keywords that might need current information (we'll note this in response)
+const CURRENT_INFO_KEYWORDS = [
   'latest', 'current', 'recent', 'today', 'now', 
-  'price', 'cost', 'deal', 'offer', 'discount', 'sale', 'deals',
-  'compare', 'review', 'best', 'top', 'rating', 
+  'price', 'cost', 'deal', 'offer', 'discount', 'sale',
   '2024', '2025', '2026',
-  'mate 70', 'mate 60', 'pura 70', 'mate x', 'matebook', 'matepad',
-  'huawei watch', 'freebuds', 'harmonyos'
 ];
 
-const SEARCH_EXCLUSIONS = [
-  'policy', 'return', 'refund', 'shipping options', 'payment method',
-  'track order', 'order status', 'customer service', 'human support',
-  'faq', 'frequently asked', 'help me', 'how do i', 'what is'
-];
-
-function needsWebSearch(query: string): boolean {
+function mentionsCurrentInfo(query: string): boolean {
   const lowerQuery = query.toLowerCase();
-  if (SEARCH_EXCLUSIONS.some(e => lowerQuery.includes(e))) return false;
-  return SEARCH_KEYWORDS.some(k => lowerQuery.includes(k));
+  return CURRENT_INFO_KEYWORDS.some(keyword => lowerQuery.includes(keyword));
 }
 
-function limitMessages(messages: ChatMessage[], max = 4): ChatMessage[] {
+function limitMessages(messages: ChatMessage[], max = 6): ChatMessage[] {
   return messages.length <= max ? messages : messages.slice(-max);
 }
 
-function truncateContent(content: string, max = 800): string {
+function truncateContent(content: string, max = 1000): string {
   return content.length <= max ? content : content.slice(0, max) + '...';
-}
-
-async function performWebSearch(zai: any, query: string): Promise<SearchResult[]> {
-  const currentYear = new Date().getFullYear();
-  let enhancedQuery = query;
-  
-  if (!query.includes('2025') && !query.includes('2026')) {
-    enhancedQuery = `${query} ${currentYear}`;
-  }
-  
-  try {
-    const result = await Promise.race([
-      zai.functions.invoke('web_search', { query: enhancedQuery.slice(0, 200), num: 5 }),
-      new Promise<never>((_, r) => setTimeout(() => r(new Error('Search timeout')), 10000))
-    ]);
-    return (result as SearchResult[]) || [];
-  } catch (e) {
-    console.error('[Agent API] Search error:', e);
-    return [];
-  }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages } = await request.json();
-    
+    const body = await request.json();
+    const { messages } = body;
+
     if (!messages || !Array.isArray(messages)) {
-      return Response.json({ error: 'Messages required' }, { status: 400 });
+      return Response.json(
+        { error: 'Messages array is required' },
+        { status: 400 }
+      );
     }
 
-    console.log('[Agent API] Request received');
+    console.log('[Agent API] ========== NEW REQUEST ==========');
+    console.log('[Agent API] Time:', new Date().toISOString());
 
     const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
+    
     if (!lastUserMessage) {
-      return Response.json({ error: 'No user message' }, { status: 400 });
+      return Response.json(
+        { error: 'No user message found' },
+        { status: 400 }
+      );
     }
 
-    // Initialize ZAI with environment variables
-    const zai = await initZAI();
-    console.log('[Agent API] ZAI initialized');
+    console.log('[Agent API] User query:', lastUserMessage.content.slice(0, 100));
 
-    // Web search if needed
-    const shouldSearch = needsWebSearch(lastUserMessage.content);
-    let searchResults: SearchResult[] = [];
-    if (shouldSearch) {
-      searchResults = await performWebSearch(zai, lastUserMessage.content);
-    }
+    // Initialize OpenAI
+    const openai = getOpenAI();
+    console.log('[Agent API] OpenAI client initialized');
 
-    // Build messages
-    const messagesWithSystem: ChatMessage[] = [
+    // Check if query mentions current info
+    const needsCurrentInfo = mentionsCurrentInfo(lastUserMessage.content);
+    
+    // Build messages array
+    const limitedMessages = limitMessages(messages, 6);
+    const messagesForAPI: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
       { role: 'system', content: SYSTEM_PROMPT }
     ];
 
-    for (const msg of limitMessages(messages, 4)) {
+    // Add conversation history
+    for (const msg of limitedMessages) {
       if (msg === lastUserMessage) continue;
-      messagesWithSystem.push({
-        role: msg.role as 'user' | 'assistant' | 'system',
-        content: truncateContent(msg.content, 600)
+      
+      let cleanContent = msg.content;
+      // Clean up any previous search markers
+      if (cleanContent.includes('**CURRENT WEB SEARCH')) {
+        cleanContent = cleanContent.split('**CURRENT WEB SEARCH')[0].trim();
+      }
+      
+      messagesForAPI.push({
+        role: msg.role as 'user' | 'assistant',
+        content: truncateContent(cleanContent, 800)
       });
     }
 
-    let finalContent = lastUserMessage.content;
-    if (searchResults.length > 0) {
-      finalContent += `\n\nSearch Results:\n${searchResults.map((r, i) => 
-        `${i + 1}. ${r.name} - ${r.snippet}`
-      ).join('\n')}`;
+    // Add user message with note if asking about current info
+    let userContent = lastUserMessage.content;
+    if (needsCurrentInfo) {
+      userContent += `\n\n[Note: This query may require the most current information. Please provide the best available knowledge and note if information might have changed.]`;
     }
+    
+    messagesForAPI.push({
+      role: 'user',
+      content: userContent
+    });
 
-    messagesWithSystem.push({ role: 'user', content: finalContent });
+    console.log('[Agent API] Sending to OpenAI with', messagesForAPI.length, 'messages');
 
-    // Call AI
-    const completion = await Promise.race([
-      zai.chat.completions.create({ messages: messagesWithSystem, stream: false }),
-      new Promise<never>((_, r) => setTimeout(() => r(new Error('AI timeout')), 45000))
-    ]);
+    // Call OpenAI API with timeout
+    const completionPromise = openai.chat.completions.create({
+      model: 'gpt-4o-mini', // Fast and cost-effective
+      messages: messagesForAPI,
+      max_tokens: 1500,
+      temperature: 0.7,
+    });
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('OpenAI API timeout after 30s')), 30000);
+    });
+
+    const completion = await Promise.race([completionPromise, timeoutPromise]);
 
     const content = completion.choices?.[0]?.message?.content;
     
     if (!content) {
-      return Response.json({ content: "I couldn't generate a response. Please try again." });
+      return Response.json({
+        content: "I apologize, but I couldn't generate a response. Please try again."
+      });
     }
 
-    console.log('[Agent API] Success');
-    return Response.json({ content, searchResults: searchResults.length > 0 ? searchResults : undefined });
+    console.log('[Agent API] Response generated, length:', content.length);
+    console.log('[Agent API] ========== COMPLETE ==========');
+
+    return Response.json({
+      content,
+      // No search results when using OpenAI directly
+    });
 
   } catch (error: any) {
     console.error('[Agent API] Error:', error);
-    return Response.json({ 
-      content: `Error: ${error.message}. Please check Vercel environment variables (Z_AI_BASE_URL, Z_AI_API_KEY).`,
-      error: true
+    console.error('[Agent API] Stack:', error?.stack);
+    
+    const errorMessage = error?.message || 'Unknown error';
+    
+    // Check for specific error types
+    let userMessage = "I'm experiencing some technical difficulties right now. Please try again in a moment.";
+    
+    if (errorMessage.includes('OPENAI_API_KEY')) {
+      userMessage = "Configuration error: The OpenAI API key is not set. Please contact the administrator.";
+    } else if (errorMessage.includes('timeout')) {
+      userMessage = "The request took too long. Please try with a shorter message.";
+    } else if (errorMessage.includes('rate limit') || errorMessage.includes('429')) {
+      userMessage = "We're experiencing high demand. Please try again in a few moments.";
+    } else if (errorMessage.includes('insufficient_quota') || errorMessage.includes('billing')) {
+      userMessage = "Service temporarily unavailable. Please contact support.";
+    }
+    
+    return Response.json({
+      content: userMessage,
+      error: errorMessage,
+      retryable: true
     });
   }
 }

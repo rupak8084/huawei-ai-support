@@ -7,9 +7,6 @@ const nextConfig: NextConfig = {
   
   reactStrictMode: false,
   
-  // External packages for server components
-  serverExternalPackages: ['z-ai-web-dev-sdk'],
-  
   // Ensure API routes work properly
   async headers() {
     return [
